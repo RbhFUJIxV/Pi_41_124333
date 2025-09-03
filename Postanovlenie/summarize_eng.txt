@@ -1,0 +1,42 @@
+### Summary of the Russian Government Resolution No. 676 dated July 6, 2015
+
+1. **Core content of the document:**  
+The resolution sets requirements governing the entire life cycle of state information systems (SIS). This includes the following stages: creation and development, commissioning, operation, decommissioning, and the subsequent storage of data from the system’s databases after its retirement.
+
+2. **Who is required to comply:**  
+* Mandatory compliance — for all federal and regional executive authorities.  
+* Recommended compliance — for other state bodies, management bodies of extrabudgetary funds, and local self-government authorities.
+
+3. **Key requirements for each life cycle stage:**  
+
+**a) System creation and development:**  
+* Initiated based on a regulatory act or decision by an authorized body.  
+* The process must strictly follow the technical specification (TS).  
+* Seven key steps are defined:  
+  1. Preparation of project documentation.  
+  2. Development of operational documentation (including user instructions, troubleshooting guides, etc.).  
+  3. Development or adaptation of software.  
+  4. Commissioning and adjustment works.  
+  5. Preliminary testing.  
+  6. Pilot operation involving identification and elimination of deficiencies.  
+  7. Acceptance testing and formal commissioning of the system.
+
+**b) Commissioning:**  
+* Executed based on a legal act issued by the authorized body.  
+* This act confirms that all necessary preparatory activities have been completed.  
+* The start date for operation cannot precede the completion of these activities.
+
+**c) Operation:**  
+* Begins on the date specified in the commissioning act.  
+* Must be conducted strictly according to the approved operational documentation.
+
+**d) Decommissioning:**  
+* Grounds include expiration of service life, impracticality, inefficiency, or changes in legislation.  
+* Formalized by a legal act which must contain:  
+  * A plan of activities for system decommissioning.  
+  * Rules and timelines for storing data from the system databases (these storage periods cannot be shorter than those for corresponding paper documents).  
+  * Procedures for notifying users.
+
+**Conclusion:**  
+This regulatory act establishes a uniform and strict framework for managing state information systems throughout their entire life cycle — from conception to data archiving. Its aim is to enhance efficiency and accountability in the use of public funds. Special emphasis is placed on the preservation of data even after the system has ceased operation.
+
