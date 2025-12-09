@@ -1,0 +1,67 @@
+@startuml Диаграмма C1: Контекст и взаимодействие системы
+
+title Контекст системы "Визуальная новелла с динамическим AI-повествованием"
+
+skinparam {
+  BackgroundColor #F8F9FA
+  ArrowColor #2C3E50
+  ActorBorderColor #2C3E50
+  ActorBackgroundColor #E8F4F8
+  SystemBorderColor #3498DB
+  SystemBackgroundColor #FFFFFF
+  DatabaseBorderColor #27AE60
+  DatabaseBackgroundColor #E8F6F3
+}
+
+' Внешние сущности (акторы)
+actor "Игрок" as Player
+actor "API языковой модели\n(Облачная/Локальная LLM)" as LLM_API
+actor "API генерации изображений\n(ComfyUI / Stable Diffusion)" as IMG_API
+actor "ОС и файловая система" as FS
+actor "Внешние игровые платформы\n(Steam, itch.io)" as Platform
+
+' Система (основной компонент)
+rectangle "Ядро системы" as Core {
+  rectangle "Игровой движок\n(RenPy)" as RenPy
+  rectangle "API Gateway / Менеджер сервисов" as API_Gateway
+  rectangle "База данных\n(SQLite)" as DB
+  
+  RenPy -- API_Gateway : RPC-вызовы
+  API_Gateway -- DB : CRUD-операции
+}
+
+' Взаимодействия
+Player --> RenPy : Ввод текста / выбор действий\nУправление интерфейсом\nЗадание контекста
+Player <-- RenPy : Отображение сгенерированной истории\nИнтерфейс управления\nИзображения и звук
+
+API_Gateway --> LLM_API : HTTP(S) / API-запросы\n(контекст + промпт)
+LLM_API --> API_Gateway : JSON-ответ\n(текст + метаданные)
+
+API_Gateway --> IMG_API : HTTP(S) / API-запросы\n(текстовое описание)
+IMG_API --> API_Gateway : Изображение\n(PNG/JPEG)
+
+DB --> FS : Чтение/запись файла БД\nШифрование/дешифрование
+RenPy --> FS : Загрузка стандартных активов\n(спрайты, фоны, GUI)
+API_Gateway --> FS : Кэширование сгенерированных\nизображений и текстов
+
+Core --> Platform : Загрузка/обновление дистрибутива\nСбор статистики\nРаспределение ключей
+
+' Примечания
+note right of Core
+<b>Ключевые потоки данных:</b>
+1. Контекст и история диалога
+2. Текстовая генерация
+3. Графическая генерация
+4. Состояние игровой сессии
+5. Пользовательская конфигурация
+end note
+
+note bottom of Player
+<b>Роли игрока:</b>
+- Автор (задает контекст)
+- Читатель (воспринимает историю)
+- Редактор (вводит реплики)
+- Настройщик (конфигурирует API)
+end note
+
+@enduml

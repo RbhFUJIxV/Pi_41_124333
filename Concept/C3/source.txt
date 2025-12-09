@@ -1,0 +1,194 @@
+@startuml Диаграмма C3: Компонентная диаграмма "Python-слоя интеграции"
+
+title Компонентная диаграмма: Python-слой интеграции
+
+skinparam {
+  BackgroundColor #F8F9FA
+  ArrowColor #2C3E50
+  ComponentBorderColor #2C3E50
+  ComponentBackgroundColor #FFFFFF
+  InterfaceBackgroundColor #F1F8E9
+  DatabaseBorderColor #27AE60
+  DatabaseBackgroundColor #E8F6F3
+  QueueBorderColor #8E44AD
+  QueueBackgroundColor #F4ECF7
+}
+
+' Внешние системы (упрощенный вид из C2)
+component "Игровой движок RenPy" as RenPy
+cloud "Внешние API" as ExternalAPI
+database "Файловая система" as FS
+
+' Основной пакет Python-слоя
+package "Python-слой интеграции" {
+  ' Блок API Gateway
+  component "API Gateway" as APIGateway {
+    interface "ITextGenerator" as ITextGen
+    interface "IImageGenerator" as IImageGen
+    
+    component "LLM Dispatcher" as LLMDispatcher {
+      component "Prompt Builder" as PromptBuilder
+      component "Response Parser" as ResponseParser
+      component "Fallback Handler" as FallbackHandler
+    }
+    
+    component "Image Generator Dispatcher" as ImgDispatcher {
+      component "Image Prompt Builder" as ImgPromptBuilder
+      component "Image Cache Handler" as ImgCacheHandler
+    }
+    
+    component "API Configuration Manager" as APIConfigManager
+    component "Error Handler & Logger" as ErrorHandler
+  }
+  
+  ' Блок управления данными
+  component "Data Manager" as DataManager {
+    component "Session Manager" as SessionManager
+    component "Context Processor" as ContextProcessor {
+      component "Context Formatter" as ContextFormatter
+      component "Memory Window Manager" as MemoryWindow
+    }
+    component "Cache Manager" as CacheManager {
+      component "Text Cache" as TextCache
+      component "Image Cache" as ImageCache
+    }
+  }
+  
+  ' База данных
+  database "SQLite Database" as SQLiteDB {
+    component "Sessions Table" as SessionsTable
+    component "Dialogs Table" as DialogsTable
+    component "Resources Table" as ResourcesTable
+    component "Settings Table" as SettingsTable
+  }
+  
+  ' Очередь задач
+  queue "Task Queue" as TaskQueue {
+    component "Text Generation Queue" as TextQueue
+    component "Image Generation Queue" as ImageQueue
+    component "Result Aggregator" as ResultAggregator
+  }
+  
+  ' Сервисные компоненты
+  component "Security Module" as SecurityModule {
+    component "Content Filter" as ContentFilter
+    component "API Key Manager" as APIKeyManager
+    component "Data Encryptor" as DataEncryptor
+  }
+  
+  component "Configuration Manager" as ConfigManager {
+    component "Settings Loader" as SettingsLoader
+    component "Environment Validator" as EnvValidator
+  }
+}
+
+' Внешние адаптеры
+package "Внешние адаптеры" {
+  component "LLM Adapters" as LLMAdapters {
+    component "OpenAI Adapter" as OpenAIAdapter
+    component "Local LLM Adapter" as LocalLLMAdapter
+    component "YandexGPT Adapter" as YandexAdapter
+  }
+  
+  component "Image Gen Adapters" as ImgAdapters {
+    component "ComfyUI Adapter" as ComfyUIAdapter
+    component "Stable Diffusion Adapter" as SDAdapter
+  }
+}
+
+' Внутренние связи в Python-слое
+
+' API Gateway внутренние связи
+APIGateway ..> ITextGen
+APIGateway ..> IImageGen
+LLMDispatcher ..> ITextGen
+ImgDispatcher ..> IImageGen
+LLMDispatcher --> PromptBuilder : build_prompt()
+LLMDispatcher --> ResponseParser : parse_response()
+LLMDispatcher --> FallbackHandler : handle_failure()
+ImgDispatcher --> ImgPromptBuilder : build_img_prompt()
+ImgDispatcher --> ImgCacheHandler : check_cache()
+
+' Data Manager внутренние связи
+DataManager --> SessionManager : get_active_session()
+DataManager --> ContextProcessor : process_context()
+ContextProcessor --> ContextFormatter : format_for_llm()
+ContextProcessor --> MemoryWindow : get_relevant_memory()
+
+' Взаимодействие между основными компонентами
+APIGateway --> DataManager : get_context_data()
+APIGateway --> SecurityModule : validate_content()
+APIGateway --> ConfigManager : get_api_config()
+APIGateway --> TaskQueue : submit_task()
+
+DataManager --> SQLiteDB : execute_query()
+DataManager --> CacheManager : get_cached_data()
+CacheManager --> TextCache : get_text()
+CacheManager --> ImageCache : get_image()
+
+TaskQueue --> APIGateway : notify_completion()
+TaskQueue --> DataManager : store_result()
+
+SecurityModule --> SQLiteDB : secure_credentials()
+ConfigManager --> SQLiteDB : load_settings()
+
+' Взаимодействие с адаптерами
+LLMDispatcher --> LLMAdapters : call_adapter()
+LLMAdapters --> ITextGen : implements
+OpenAIAdapter --> ExternalAPI : HTTP request
+LocalLLMAdapter --> ExternalAPI : Local API call
+
+ImgDispatcher --> ImgAdapters : call_adapter()
+ImgAdapters --> IImageGen : implements
+ComfyUIAdapter --> ExternalAPI : HTTP request
+SDAdapter --> ExternalAPI : HTTP request
+
+' Внешние взаимодействия
+RenPy --> APIGateway : generate_text(context, user_input)
+RenPy --> APIGateway : generate_image(description)
+RenPy --> DataManager : save_game_state()
+RenPy --> ConfigManager : update_settings()
+
+APIGateway --> ExternalAPI : API calls
+SecurityModule --> FS : encrypt_db_file()
+CacheManager --> FS : store_cached_files()
+
+' Примечания
+note top of APIGateway
+<b>API Gateway:</b>
+- Единая точка входа для всех
+  генеративных операций
+- Управляет диспетчеризацией
+  и обработкой ошибок
+end note
+
+note right of DataManager
+<b>Data Manager:</b>
+- Управление состоянием приложения
+- Формирование контекста для LLM
+- Многоуровневое кэширование
+end note
+
+note left of SecurityModule
+<b>Security Module:</b>
+- Фильтрация контента
+- Шифрование данных
+- Управление ключами API
+end note
+
+note bottom of TaskQueue
+<b>Task Queue:</b>
+- Асинхронная обработка задач
+- Очередь с приоритетами
+- Агрегация результатов
+end note
+
+' Легенда
+legend right
+<color:#3498DB>Сплошная линия</color> : Синхронный вызов
+<color:#E74C3C>Пунктирная линия</color> : Интерфейс/реализация
+<color:#27AE60>Толстая линия</color> : Поток данных
+<color:#8E44AD>Волнистая линия</color> : Асинхронное взаимодействие
+end legend
+
+@enduml

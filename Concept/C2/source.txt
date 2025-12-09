@@ -1,0 +1,120 @@
+@startuml Диаграмма C2: Контейнерная диаграмма системы
+
+title Контейнерная диаграмма: "Визуальная новелла с динамическим AI-повествованием"
+
+skinparam {
+  BackgroundColor #F8F9FA
+  ArrowColor #2C3E50
+  ComponentBorderColor #2C3E50
+  ComponentBackgroundColor #FFFFFF
+  DatabaseBorderColor #27AE60
+  DatabaseBackgroundColor #E8F6F3
+  QueueBorderColor #8E44AD
+  QueueBackgroundColor #F4ECF7
+  AgentBorderColor #E74C3C
+  AgentBackgroundColor #FDEDEC
+}
+
+' Внешние пользователи и системы
+actor "Игрок" as Player
+agent "Внешние платформы" as Platforms
+agent "Администратор/Разработчик" as Admin
+
+' Контейнер: Клиентское приложение
+package "Клиентское приложение (Устройство пользователя)" as ClientApp {
+  component "Игровой движок RenPy" as RenPy {
+    component "UI-слой\n(Интерфейс, рендеринг)" as UI
+    component "Игровая логика\n(Сценарии, состояния)" as GameLogic
+    component "Менеджер ресурсов\n(Аудио, графика)" as ResourceManager
+  }
+  
+  component "Python-слой интеграции" as PythonLayer {
+    component "API Gateway" as APIGateway {
+      component "Менеджер LLM" as LLMManager
+      component "Менеджер изображений" as ImgManager
+    }
+    
+    component "Менеджер данных" as DataManager {
+      component "Контекстный процессор" as ContextProcessor
+      component "Кэш-менеджер" as CacheManager
+    }
+    
+    database "Локальная БД (SQLite)" as SQLiteDB {
+      component "Схема игровых сессий" as SessionSchema
+      component "Схема истории диалогов" as DialogSchema
+      component "Схема ресурсов" as ResourceSchema
+    }
+    
+    queue "Очередь заданий\n(Redis/In-memory)" as TaskQueue
+  }
+}
+
+' Внешние системы/контейнеры
+cloud "Облачные сервисы" as CloudServices {
+  component "API языковой модели\n(e.g., OpenAI, YandexGPT)" as CloudLLM
+  component "API генерации изображений\n(e.g., ComfyUI, StableDiffusion)" as CloudImgGen
+}
+
+node "Локальные сервисы" as LocalServices {
+  component "Локальная LLM\n(Ollama, LM Studio)" as LocalLLM
+  component "Локальный генератор\nизображений" as LocalImgGen
+}
+
+' Взаимодействия
+
+' Основные пользовательские потоки
+Player --> UI : "Взаимодействие с интерфейсом\n(ввод текста, выбор действий)"
+UI --> GameLogic : "Обработка пользовательских действий"
+GameLogic --> DataManager : "Запрос/обновление состояния игры"
+DataManager --> SQLiteDB : "CRUD-операции"
+UI <-- ResourceManager : "Отображение графики/аудио"
+
+' Потоки генерации контента
+GameLogic --> TaskQueue : "Постановка задачи генерации\n(текст/изображение)"
+TaskQueue --> APIGateway : "Асинхронная обработка задач"
+APIGateway --> LLMManager : "Запрос на генерацию текста"
+LLMManager --> CloudLLM : "HTTP API-запрос (приоритет)"
+LLMManager --> LocalLLM : "Локальный вызов (резерв)"
+APIGateway --> ImgManager : "Запрос на генерацию изображения"
+ImgManager --> CloudImgGen : "HTTP API-запрос (приоритет)"
+ImgManager --> LocalImgGen : "Локальный вызов (резерв)"
+
+' Управление контекстом и кэшированием
+APIGateway --> ContextProcessor : "Формирование промпта\nс учетом контекста"
+ContextProcessor --> SQLiteDB : "Извлечение истории диалогов"
+CacheManager --> APIGateway : "Проверка кэша генерации"
+CacheManager --> ResourceManager : "Предоставление кэшированных\nресурсов"
+
+' Администрирование и интеграция
+Admin --> PythonLayer : "Настройка API, управление\nмоделями, мониторинг"
+Platforms --> ClientApp : "Обновления, статистика,\nDRM-проверки"
+
+' Стили и примечания
+note top of ClientApp
+<b>Контейнер "Клиентское приложение":</b>
+- Выполняется на устройстве пользователя
+- Содержит всю бизнес-логику
+- Может работать автономно
+(с локальными моделями)
+end note
+
+note right of CloudServices
+<b>Внешние облачные сервисы:</b>
+- Используются по умолчанию
+- Требуют интернет-соединения
+- Могут иметь лимиты/тарифы
+end note
+
+note left of LocalServices
+<b>Локальные сервисы:</b>
+- Работают офлайн
+- Требуют мощного железа
+- Полная конфиденциальность
+end note
+
+' Связи между компонентами внутри контейнера
+LLMManager -[hidden]down- ImgManager
+APIGateway -[hidden]down- DataManager
+DataManager -[hidden]down- TaskQueue
+
+@enduml
